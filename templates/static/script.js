@@ -25,7 +25,7 @@ const maxBadges = 3;
 let tableInitialized = false;
 let expandedCells = [];
 let diffMode = false;
-const noDiffMessage = 'No diff';
+const noDiffMessage = '-';
 
 
 // General
@@ -423,6 +423,36 @@ function showMoreBadges(e, n, id) {
     })
 }
 
+function displayHash(hash) {
+    const container = document.createElement('div');
+    container.onclick = (e) => e.stopPropagation();
+    container.style.display = 'inline-flex';
+    container.style.columnGap = '5px';
+    const label = document.createElement('span');
+    label.classList.add('font-mono', 'tooltip');
+    label.style.fontSize = '0.9rem';
+    label.innerHTML = hash.slice(0, 7);
+    const tooltip = document.createElement('span');
+    tooltip.classList.add('tooltip-text');
+    tooltip.innerHTML = hash;
+    label.appendChild(tooltip);
+    container.appendChild(label);
+    const copyButton = document.createElement('div');
+    copyButton.classList.add('ri-file-copy-line');
+    copyButton.onclick = () => {
+        navigator.clipboard.writeText(hash);
+        copyButton.classList.add('ri-check-line');
+        copyButton.classList.remove('ri-file-copy-line');
+        setTimeout(() => {
+            copyButton.classList.remove('ri-check-line');
+            copyButton.classList.add('ri-file-copy-line');
+        }, 3000);
+
+    };
+    container.appendChild(copyButton);
+    return container;
+}
+
 function setupDataTable() {
     $('#cache').DataTable({
         ordering: false,
@@ -442,7 +472,7 @@ function setupDataTable() {
                 data: 'hash',
                 className: 'nowrap',
                 render: function (data, type, row, info) {
-                    return '<span class="font-mono">' + data + '</span>';
+                    return displayHash(data);
                 },
             },
             {
