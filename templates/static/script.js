@@ -81,15 +81,6 @@ function setPackageName(name) {
     document.getElementById('package-link').href = "https://packages.spack.io/package.html?name=" + name;
 }
 
-function toggleMenu(menuId) {
-    const menu = document.getElementById(menuId);
-    if (menu.style.display === "block") {
-        menu.style.display = "none";
-    } else {
-        menu.style.display = "block";
-    }
-}
-
 // Sidebar
 function setupSidebarResize() {
     const resizer = document.getElementById('sidebar-resize');
@@ -116,8 +107,9 @@ function resizeSidebar(e) {
 
 // Tree
 function setTreeOrganization(organization) {
-    document.getElementById('tree-organization').innerHTML = organization
-    document.getElementById('tree-root').innerHTML = 'Loading tree...'
+    document.getElementById('tree-organization').innerHTML = organization;
+    document.activeElement.blur();
+    document.getElementById('tree-root').innerHTML = 'Loading tree...';
     loadTree(organization);
     filterTree();
 }
@@ -454,6 +446,31 @@ function displayHash(hash) {
     return container;
 }
 
+function setupColumnVisibilityOptions(columns) {
+    const container = document.getElementById('columns-menu');
+    const table = $('#cache').DataTable();
+    for (const col in columns) {
+        const visible = columns[col];
+        const colIndex = table.columns().names().indexOf(col);
+        table.column(colIndex).visible(visible);
+        const item = document.createElement('li');
+        item.style.padding = '2px 4px';
+        if (visible) item.classList.add('checked');
+        item.onclick = () => {
+            const currentVisibility = table.column(colIndex).visible();
+            if (currentVisibility) {
+                table.column(colIndex).visible(false);
+                item.classList.remove('checked');
+            } else {
+                table.column(colIndex).visible(true);
+                item.classList.add('checked');
+            }
+        }
+        item.innerHTML = col;
+        container.appendChild(item);
+    }
+}
+
 function setupDataTable() {
     $('#cache').DataTable({
         ordering: false,
@@ -470,6 +487,7 @@ function setupDataTable() {
         pageLength: 25,
         columns: [
             {
+                name: 'hash',
                 data: 'hash',
                 className: 'nowrap',
                 render: function (data, type, row, info) {
@@ -477,48 +495,57 @@ function setupDataTable() {
                 },
             },
             {
+                name: 'version',
                 data: 'version',
+                className: 'dt-left',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'version', [data]);
                 }
             },
             {
+                name: 'tags',
                 data: 'tags',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'tag', data);
                 },
             },
             {
+                name: 'stacks',
                 data: 'stacks',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'stack', data);
                 },
             },
             {
+                name: 'variants',
                 data: 'variants',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'variant', data);
                 },
             },
             {
+                name: 'platform',
                 data: 'platform',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'platform', [data]);
                 },
             },
             {
+                name: 'os',
                 data: 'os',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'os', [data]);
                 },
             },
             {
+                name: 'target',
                 data: 'target',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'target', [data]);
                 },
             },
             {
+                name: 'dependencies',
                 data: 'dependencies',
                 render: function (data, type, row, info) {
                     return groupBadges(info.row, 'dependency', data, true);
@@ -548,6 +575,17 @@ function setupDataTable() {
             }
         }
     });
+    setupColumnVisibilityOptions({
+        hash: true,
+        version: true,
+        tags: true,
+        stacks: true,
+        variants: false,
+        platform: true,
+        os: true,
+        target: true,
+        dependencies: false,
+    })
     tableInitialized = true;
 }
 

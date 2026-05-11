@@ -15,26 +15,25 @@
         </label>
     </div>
 
-    <div class="form-control mt-2" onclick="toggleMenu('tree-organization-menu')">
+    <div class="form-control mt-2">
         <label class="label floating">
             <span class="label-text-alt text-gray-400 text-[10px]">Tree Organization</span>
         </label>
         <button class="custom-select w-full">
             <span id="tree-organization" class="selected">Stack -> Tag</span>
-        </button>
-
-        <div class="custom-select-options" id="tree-organization-menu" style="display: none">
-            <div class="menu-wrap">
-                <ul>
-                    <li onclick="setTreeOrganization('Tag -> Stack')">
-                        <a>Tag -> Stack</a>
-                    </li>
-                    <li onclick="setTreeOrganization('Stack -> Tag')">
-                        <a>Stack -> Tag</a>
-                    </li>
-                </ul>
+            <div class="custom-select-options" id="tree-organization-menu">
+                <div class="menu-wrap">
+                    <ul>
+                        <li onclick="setTreeOrganization('Tag -> Stack')">
+                            <a>Tag -> Stack</a>
+                        </li>
+                        <li onclick="setTreeOrganization('Stack -> Tag')">
+                            <a>Stack -> Tag</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+        </button>
     </div>
     <div class="button-set">
         <a class="button btn btn-secondary btn-sm mt-2" onclick="setAllNodesOpen(true)">

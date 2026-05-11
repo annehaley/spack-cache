@@ -872,13 +872,12 @@ h3 {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  height: 3rem;
+  height: 2rem;
   padding-left: 1rem;
   padding-right: 2.5rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
   line-height: 2;
-  min-height: 3rem;
   border-width: 1px;
   border-color: hsl(var(--bc) / var(--tw-border-opacity));
   --tw-border-opacity: 0;
@@ -943,7 +942,12 @@ h3 {
   padding: 5px 0px;
 }
 
+.custom-select:focus .custom-select-options, .custom-select:focus + .custom-select-options {
+  display: block !important;
+}
+
 .custom-select-options {
+  display: none !important;
   position: absolute;
   left: -1px;
   right: -1px;
@@ -966,6 +970,14 @@ h3 {
   border-color: hsl(var(--b2, var(--b1)) / var(--tw-border-opacity));
   --tw-bg-opacity: 1;
   background-color: hsl(var(--b1) / var(--tw-bg-opacity));
+  text-align: left;
+}
+
+.custom-select-options .checked::after {
+  content: '\2713';
+  position: absolute;
+  right: 4px;
+
 }
 
 .custom-select-options ul {
@@ -3936,7 +3948,6 @@ input:checked + .slider:before {
   transform: translateX(16px);
 }
 
-
 #content-container {
   margin-left: 325px;
   max-width: calc(100% - 350px);
@@ -4060,14 +4071,6 @@ table.dataTable {
   top: 8px;
 }
 
-#badge-options-filter + #badge-options-menu {
-  display: none;
-}
-
-#badge-options-filter:focus + #badge-options-menu {
-  display: block;
-}
-
 .searchable-badge label.floating {
   position: absolute;
   text-align: left;
@@ -4116,5 +4119,3 @@ table.dataTable {
 .tooltip:hover .tooltip-text {
   display: block;
 }
-
-

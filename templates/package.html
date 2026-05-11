@@ -16,7 +16,7 @@
             <label class="label floating">
                 <span class="label-text-alt text-gray-400 text-[10px]">Filter</span>
             </label>
-            <input id="badge-options-filter" type="search" class="form-control input-sm input border-base-300"
+            <input id="badge-options-filter" type="search" class="custom-select input-sm input border-base-300"
                 oninput="filterBadgeOptions()">
             <div class="custom-select-options" id="badge-options-menu">
                 <div class="menu-wrap">
@@ -26,6 +26,17 @@
         </div>
 
         <div id="badge-filters"></div>
+
+        <div class="form-control">
+            <button class="custom-select">
+                <span class="selected">Columns</span>
+                <div class="custom-select-options">
+                    <div class="menu-wrap">
+                        <ul id="columns-menu"></ul>
+                    </div>
+                </div>
+            </button>
+        </div>
 
         <div style="display: flex; flex-direction: column;">
             <span class="label-text-alt text-gray-400 text-[10px]">Diffs Only</span>
