@@ -802,6 +802,10 @@ input:checked+.slider:before {
   z-index: 3;
 }
 
+label.floating::-webkit-scrollbar {
+    display: none;
+}
+
 /* Tables */
 .table {
   text-indent: 0;
