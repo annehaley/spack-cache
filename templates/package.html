@@ -1,12 +1,11 @@
 {% block content %}
 <div class="alert bg-primary text-white border-l-4 border-secondary ">
     <h1 id="package-name"></h1>
-    <div class="flex-none pr-5">
-        <div class="tooltip tooltip-bottom" data-tip="View on Spack Packages">
-            <a id="package-link" class="btn btn-ghost btn-square rounded-btn" target="_blank" alt="Spack Packages">
-                <i class="ri-box-3-line text-xl"></i>
-            </a>
-        </div>
+    <div class="tooltip">
+        <span class="tooltip-text">View on Spack Packages</span>
+        <a id="package-link" class="btn btn-ghost rounded" target="_blank" alt="Spack Packages">
+            <i class="ri-box-3-line text-xl"></i>
+        </a>
     </div>
 </div>
 
@@ -14,7 +13,7 @@
     <div class="table-controls">
         <div class="form-control">
             <label class="label floating">
-                <span class="label-text-alt text-gray-400 text-[10px]">Filter</span>
+                <span class="text-gray-400 text-[10px]">Filter</span>
             </label>
             <input id="badge-options-filter" type="search" class="custom-select input-sm input border-base-300"
                 oninput="filterBadgeOptions()">
@@ -39,14 +38,14 @@
         </div>
 
         <div style="display: flex; flex-direction: column;">
-            <span class="label-text-alt text-gray-400 text-[10px]">Diffs Only</span>
+            <span class="text-gray-400 text-[10px]">Diffs Only</span>
             <label class="switch">
                 <input type="checkbox" id="diff-mode-toggle" onchange="toggleDiffMode()">
                 <span class="slider"></span>
             </label>
         </div>
 
-        <div id="result-summary"></div>
+        <div id="result-summary" style="flex-shrink: 0"></div>
     </div>
 
     <table id="cache" class="table w-full">

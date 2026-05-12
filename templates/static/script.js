@@ -264,7 +264,7 @@ function createFilterBadge(key, value, remove) {
     badge.classList.add('tag', 'searchable-badge');
 
     const keyLabel = document.createElement('label');
-    keyLabel.classList.add('label-text-alt', 'text-[10px]', 'label', 'floating');
+    keyLabel.classList.add('text-[10px]', 'label', 'floating');
     keyLabel.innerHTML = key;
     badge.appendChild(keyLabel);
 
@@ -393,7 +393,7 @@ function groupBadges(rowId, column, data, link = false) {
     });
     if (data.length > maxBadges) {
         const showMore = document.createElement('button');
-        showMore.classList.add('btn', 'btn-xs', 'btn-ghost', 'normal-case', 'pl-2')
+        showMore.classList.add('btn', 'btn-sm', 'btn-ghost', 'normal-case', 'pl-2')
         showMore.innerHTML = expand ? 'Show Less' : `... Show ${data.length - maxBadges} More`;
         showMore.onclick = (e) => showMoreBadges(e, data.length - maxBadges, container.id)
         container.appendChild(showMore)
@@ -454,7 +454,6 @@ function setupColumnVisibilityOptions(columns) {
         const colIndex = table.columns().names().indexOf(col);
         table.column(colIndex).visible(visible);
         const item = document.createElement('li');
-        item.style.padding = '2px 4px';
         if (visible) item.classList.add('checked');
         item.onclick = () => {
             const currentVisibility = table.column(colIndex).visible();
