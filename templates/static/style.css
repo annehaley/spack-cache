@@ -172,7 +172,7 @@ menu {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* Borders and Backgrounds */
@@ -720,9 +720,8 @@ input:checked+.slider:before {
 
 #badge-filters {
   flex: 1;
-  min-width: 0;
+  min-width: 100px;
   max-width: 100%;
-  flex-shrink: 1;
 }
 
 #badge-filters .searchable-badge {
@@ -759,7 +758,7 @@ input:checked+.slider:before {
   transition-duration: 200ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: var(--rounded-btn, 0.5rem);
-  min-width: 0;
+  min-width: 70px;
   max-width: calc(100% - 8px);
   padding: 5px 10px;
   margin: 2px;
