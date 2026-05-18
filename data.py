@@ -2,6 +2,7 @@ import click
 import requests
 import time
 import json
+import gzip
 from json import JSONEncoder
 from pathlib import Path
 from functools import lru_cache
@@ -10,9 +11,9 @@ from functools import lru_cache
 BASE_URL = 'https://binaries.spack.io/'
 MANIFEST_URL = BASE_URL + 'cache_spack_io_index.json'
 DATA_DIR = Path(__file__).parent / '_data'
-PACKAGE_DATA_PATH = DATA_DIR / 'package_data.json'
-SPECS_DATA_PATH = DATA_DIR / 'specs_data.json'
-TREE_DATA_PATH = DATA_DIR / 'tree_data.json'
+PACKAGE_DATA_PATH = DATA_DIR / 'package_data.json.gz'
+SPECS_DATA_PATH = DATA_DIR / 'specs_data.json.gz'
+TREE_DATA_PATH = DATA_DIR / 'tree_data.json.gz'
 
 
 class SetEncoder(JSONEncoder):
@@ -28,7 +29,7 @@ def get_response(url):
 
 def save_data(data, path):
     path.parent.mkdir(exist_ok=True, parents=True)
-    with open(path, 'w') as f:
+    with gzip.open(path, 'wt', encoding='UTF-8') as f:
         json.dump(data, f, indent=4, cls=SetEncoder)
 
 
