@@ -4,7 +4,7 @@ View the deployment at [https://cache.spack.io/](https://cache.spack.io/).
 
 ![Home View](screenshots/spack_cache_home_view.png)
 
-When you select a package name from the tree in the sidebar, you'll be presented with a table to compare available specs for that package.
+When you select a package name from the sidebar, you'll be presented with a table to compare available specs for that package.
 
 ![Home View](screenshots/spack_cache_package_view.png)
 

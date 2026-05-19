@@ -1,7 +1,6 @@
 let basePath = undefined;
 let packageData = undefined;
 let specData = undefined;
-let treeData = undefined;
 let packageName = undefined;
 let currentSpecs = undefined;
 let sidebarMinWidth = 250;
@@ -67,6 +66,7 @@ function applyRoute(params) {
                     (el) => el.innerHTML = 'Loading data...'
                 )
             }
+            applySidebarHighlights();     
         }
     }
     showContent(contentToShow);
@@ -99,6 +99,16 @@ function setPackageName(name) {
     document.getElementById('package-link').href = "https://packages.spack.io/package.html?name=" + name;
 }
 
+function matchString(match, string) {
+    match = match.toLowerCase();
+    string = string.toLowerCase();
+    if (match.endsWith('$')) {
+        return string.endsWith(match.slice(0, -1));
+    } else {
+        return string.includes(match);
+    }
+}
+
 // Sidebar
 function setupSidebarResize() {
     const resizer = document.getElementById('sidebar-resize');
@@ -123,150 +133,131 @@ function resizeSidebar(e) {
     contentContainer.style.maxWidth = `calc(100% - ${newWidth + 50}px)`
 }
 
-// Tree
-function setTreeOrganization(organization) {
-    document.getElementById('tree-organization').innerHTML = organization;
-    document.activeElement.blur();
-    document.getElementById('tree-root').innerHTML = 'Loading tree...';
-    loadTree(organization);
-    filterTree();
-}
-
-function setTreeNodeOpen(node, open) {
-    if (open) {
-        node.classList.remove('collapsed')
-    } else {
-        node.classList.add('collapsed')
-    }
-}
-
-function toggleTreeNode(node) {
-    setTreeNodeOpen(node, node.classList.contains('collapsed'))
-}
-
-function setAllNodesOpen(open) {
-    const nodes = Array.from(document.getElementsByClassName('tree-node'));
-    nodes.forEach((node) => setTreeNodeOpen(node, open));
-}
-
-function setElementChildren(element, children) {
-    element.innerHTML = ''
-    for (let i = 0; i < children.length; i++) {
-        element.appendChild(children[i])
-    }
-}
-
-function treeNavigate(item) {
-    const newUrl = basePath + `?package=${item.name}&tag=${item.tag}&stack=${item.stack}`;
-    window.history.pushState(null, '', newUrl);
-}
-
-function generateTreeNodes(items) {
-    const nodes = []
-    for (let i = 0; i < items.length; i++) {
-        const node = document.createElement('li')
-        const node_title = document.createElement('span')
-        const item = items[i];
-        node_title.innerHTML = item.name;
-        node.appendChild(node_title)
-
-        const children = items[i].children
-        if (children) {
-            node_title.classList.add('caret')
-            node_title.addEventListener('click', () => toggleTreeNode(node))
-            const children_container = document.createElement('ul')
-            children_container.classList.add('nested')
-            const child_nodes = generateTreeNodes(children)
-            setElementChildren(children_container, child_nodes)
-            node.appendChild(children_container)
-            node.classList.add('collapsed')
-            node.searchContent = child_nodes.map((node) => node.searchContent).flat()
-            const childCounter = document.createElement('span');
-            childCounter.style.paddingLeft = '5px';
-            childCounter.innerHTML += `(${child_nodes.length})`;
-            node_title.appendChild(childCounter);
+function applySidebarHighlights() {
+    Array.from(document.getElementsByClassName('sidebar-item')).forEach((item) => {
+        if (item.package === packageName && (!item.tag || badgeFilters.tag.includes(item.tag))) {
+            item.classList.add('active');
         } else {
-            node.onclick = () => treeNavigate(item);
-            node.classList.add('tree-leaf')
-            node.searchContent = [item.name]
+            item.classList.remove('active');
         }
-        node.classList.add('tree-node')
-        nodes.push(node)
-    }
-    return nodes
+    })
+    Array.from(document.getElementsByClassName('caret')).forEach((group) => {
+        if (badgeFilters.tag.includes(group.tag)) {
+            group.classList.remove('collapsed');
+        }
+    })
 }
 
-function organizeTreeData(data, organization) {
-    let firstAttr = 'tag'
-    let secondAttr = 'stack'
-    if (organization === 'Stack -> Tag') {
-        firstAttr = 'stack'
-        secondAttr = 'tag'
-    }
-    const hierarchy = {}
-    for (let i = 0; i < data.length; i++) {
-        const first = data[i][firstAttr]
-        const second = data[i][secondAttr]
-        if (!hierarchy[first]) hierarchy[first] = {}
-        if (!hierarchy[first][second]) hierarchy[first][second] = []
-        hierarchy[first][second].push(data[i])
-    }
-    const treeItems = Object.entries(hierarchy).map(([key1, level1]) => ({
-        name: key1,
-        children: Object.entries(level1).map(([key2, level2]) => ({
-            name: key2,
-            children: level2.toSorted((a, b) => a.name.localeCompare(b.name))
-        })).toSorted((a, b) => a.name.localeCompare(b.name))
-    })).toSorted((a, b) => a.name.localeCompare(b.name));
-    return treeItems
-}
-
-function loadTree(organization) {
-    const organized = organizeTreeData(treeData, organization)
-    const tree_nodes = generateTreeNodes(organized)
-    const tree_root = document.getElementById('tree-root')
-    setElementChildren(tree_root, tree_nodes)
-}
-
-function matchString(match, string) {
-    match = match.toLowerCase();
-    string = string.toLowerCase();
-    if (match.endsWith('$')) {
-        return string.endsWith(match.slice(0, -1));
-    } else {
-        return string.includes(match);
-    }
-}
-
-function filterTree() {
-    const search = document.getElementById('tree-search')
-    let filterString = search.value
-    const nodes = Array.from(document.getElementsByClassName('tree-node'))
+function filterSidebar() {
     let resultsFound = false;
-    nodes.forEach((node) => {
-        const visible = node.searchContent.filter((c) => matchString(filterString, c));
-        const filterStringClean = filterString.replace('$', '')
-        if (visible.length) {
+    const search = document.getElementById('sidebar-search');
+    let filterString = search.value;
+    const emphasisString = filterString.replace('$', '')
+    Array.from(document.getElementsByClassName('sidebar-item')).forEach((item) => {
+        const match = matchString(filterString, item.package);
+        if (match) {
             resultsFound = true;
-            node.classList.remove('hidden')
-            if (!node.classList.contains('tree-leaf')) {
-                if (filterStringClean.length > 2) {
-                    node.classList.remove('collapsed');
-                } else {
-                    node.classList.add('collapsed');
-                }
-                const title = node.children[0];
-                const counter = title.children[0];
-                counter.innerHTML = `(${visible.length})`;
-            } else {
-                const packageName = node.searchContent[0];
-                node.innerHTML = filterStringClean.length > 2 ? packageName.replace(filterStringClean, `<span class='highlight'>${filterStringClean}</span>`) : packageName;
-            }
+            item.classList.remove('hidden');
+            item.innerHTML = emphasisString.length > 0 ? item.package.replace(emphasisString, `<span class='font-bold'>${emphasisString}</span>`): item.package;
         } else {
-            node.classList.add('hidden')
+            item.classList.add('hidden');
+            item.innerHTML = item.package;
         }
+    })
+    Array.from(document.getElementsByClassName('sidebar-group')).forEach((group) => {
+        const [childCounter, childContainer] = group.children;
+        const matchedChildren = Array.from(childContainer.children).filter((child) => matchString(filterString, child.package));
+        childCounter.innerHTML = `(${matchedChildren.length})`;
+        if (matchedChildren.length) {
+            group.classList.remove('hidden');
+        } else {
+            group.classList.add('hidden');
+        }
+    })
+    document.getElementById('all-packages-nodata').style.display = resultsFound ? 'none' : 'block';
+    document.getElementById('by-tag-nodata').style.display = resultsFound ? 'none' : 'block';
+}
+
+function selectSidebarTab(tab) {
+    ['sidebar-tabs', 'sidebar-tab-contents'].forEach((setName) => {
+        const set = document.getElementById(setName);
+        Array.from(set.children).forEach((t) => {
+            if (t.id.includes(tab)) {
+                t.classList.add('active')
+            } else {
+                t.classList.remove('active')
+            }
+        })
     });
-    document.getElementById('tree-no-data').style.display = resultsFound ? 'none' : 'block';
+}
+
+function populateSidebarTabs() {
+    if (!packageData) return;
+    const allPackagesList = document.getElementById('all-packages-list');
+    const byTagList = document.getElementById('by-tag-list');
+    const tags = {};
+    Object.values(packageData).toSorted(
+        (a, b) => a.uid.localeCompare(b.uid)
+    ).forEach((package) => {
+        allPackagesList.appendChild(createSidebarItem(package, undefined));
+        package.tags.forEach((tagName) => {
+            if (!tags[tagName]) {
+                tags[tagName] = createSidebarGroup(tagName);
+            }
+            tags[tagName].children[1].appendChild(createSidebarItem(package, tagName))
+        })
+    })
+    byTagList.replaceChildren(...Object.values(tags));
+    document.getElementById('all-packages-loading').style.display = 'none';
+    document.getElementById('by-tag-loading').style.display = 'none';
+    filterSidebar();
+}
+
+function createSidebarItem(package, tagName) {
+    const item = document.createElement('li');
+    item.classList.add('sidebar-item');
+    item.innerHTML = package.uid;
+    item.onclick = (e) => {
+        e.stopPropagation();
+        let newUrl = basePath + `?package=${package.uid}`;
+        if (tagName) newUrl += `&tag=${tagName}`;
+        window.history.pushState(null, '', newUrl);
+    }
+    item.package = package.uid;
+    if (tagName) item.tag = tagName;
+    return item;
+}
+
+function createSidebarGroup(groupName) {
+    const group = document.createElement('li');
+    group.classList.add('sidebar-group', 'caret', 'collapsed');
+    group.innerHTML = groupName;
+    const childCounter = document.createElement('span');
+    childCounter.style.paddingLeft = '5px';
+    group.appendChild(childCounter);
+    const childrenContainer = document.createElement('ul');
+    childrenContainer.classList.add('nested');
+    group.appendChild(childrenContainer);
+    group.onclick = () => {toggleSidebarGroup(group)};
+    group.tag = groupName;
+    return group;
+}
+
+function setSidebarGroupOpen(group, open) {
+    if (open) {
+        group.classList.remove('collapsed')
+    } else {
+        group.classList.add('collapsed')
+    }
+}
+
+function toggleSidebarGroup(group) {
+    setSidebarGroupOpen(group, group.classList.contains('collapsed'))
+}
+
+function setAllSidebarGroupsOpen(open) {
+    const groups = Array.from(document.getElementsByClassName('sidebar-group'));
+    groups.forEach((group) => setSidebarGroupOpen(group, open));
 }
 
 // Specs Table
@@ -665,18 +656,13 @@ function updateTable() {
 // Ready
 $(document).ready(async function () {
     basePath = document.getElementById('base-path').innerHTML;
-
-    fetchGzippedJson(`${basePath}/api/tree_data.json.gz`).then((data) => {
-        treeData = data;
-        loadTree('Stack -> Tag');
-        filterTree();
-    }).catch((err) => console.error('Failed to load tree data:', err));
     fetchGzippedJson(`${basePath}/api/package_data.json.gz`).then((data) => {
         packageData = data;
+        populateSidebarTabs();
         applyRoute(window.location.search);
     }).catch((err) => console.error('Failed to load package data:', err));
     fetchGzippedJson(`${basePath}/api/specs_data.json.gz`).then((data) => {
-        specData = data
+        specData = data;
         applyRoute(window.location.search);
     }).catch((err) => console.error('Failed to load spec data:', err));
 
