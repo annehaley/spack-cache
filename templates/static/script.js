@@ -170,8 +170,10 @@ function filterSidebar() {
         childCounter.innerHTML = `(${matchedChildren.length})`;
         if (matchedChildren.length) {
             group.classList.remove('hidden');
+            if (emphasisString.length > 0) group.classList.remove('collapsed');
         } else {
             group.classList.add('hidden');
+            group.classList.add('collapsed');
         }
     })
     document.getElementById('all-packages-nodata').style.display = resultsFound ? 'none' : 'block';
