@@ -66,9 +66,9 @@ function applyRoute(params) {
                     (el) => el.innerHTML = 'Loading data...'
                 )
             }
-            applySidebarHighlights();     
         }
     }
+    applySidebarHighlights();     
     showContent(contentToShow);
 }
 
