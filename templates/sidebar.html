@@ -15,7 +15,7 @@
 
     <div id="sidebar-tabs" class="tab-control">
         <div id="all-packages-tab" class="tab active" onclick="selectSidebarTab('all-packages')">All Packages</div>
-        <div id="by-tag-tab" class="tab" onclick="selectSidebarTab('by-tag')">By Tag</div>
+        <div id="by-release-tab" class="tab" onclick="selectSidebarTab('by-release')">By Release</div>
     </div>
     <div id="sidebar-tab-contents" class="tab-content">
         <div id="all-packages-content" class="active">
@@ -23,7 +23,7 @@
             <div id="all-packages-nodata" class="status" style="display: none">No results.</div>
             <div id="all-packages-list" class="sidebar-list"></div>
         </div>
-        <div id="by-tag-content">
+        <div id="by-release-content">
             <div class="button-set">
                 <a class="btn btn-secondary btn-sm" onclick="setAllSidebarGroupsOpen(true)">
                     Expand All
@@ -32,9 +32,9 @@
                     Collapse All
                 </a>
             </div>
-            <div id="by-tag-loading" class="status">Loading...</div>
-            <div id="by-tag-nodata" class="status" style="display: none">No results.</div>
-            <div id="by-tag-list" class="sidebar-list"></div>
+            <div id="by-release-loading" class="status">Loading...</div>
+            <div id="by-release-nodata" class="status" style="display: none">No results.</div>
+            <div id="by-release-list" class="sidebar-list"></div>
         </div>
     </div>
 

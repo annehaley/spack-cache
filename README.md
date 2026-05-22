@@ -20,11 +20,11 @@ This Python script will parse data from [https://binaries.spack.io/](https://bin
 uv run data.py
 ```
 
-By default, the data script will parse data for all build tags and all packages. To reduce data size, you may pass in optional arguments to filter by tag name and/or package name.
+By default, the data script will parse data for all build releases and all packages. To reduce data size, you may pass in optional arguments to filter by release name and/or package name.
 
 | Shorthand | Longhand  | Description                                               |
 | --------- | --------- | --------------------------------------------------------- |
-| -t        | --tag     | Build tag to include. Can be specified multiple times.    |
+| -t        | --release | Build release to include. Can be specified multiple times.|
 | -s        | --stack   | Stack name to include. Can be specified multiple times.   |
 | -p        | --package | Package name to include. Can be specified multiple times. |
 

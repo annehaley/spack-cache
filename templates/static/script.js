@@ -13,11 +13,11 @@ let badgeFilters = {
     os: [],
     target: [],
     stack: [],
-    tag: [],
+    release: [],
 };
 const pluralColumns = {
     variant: 'variants',
-    tag: 'tags',
+    release: 'releases',
     stack: 'stacks',
 }
 const maxBadges = 3;
@@ -135,14 +135,14 @@ function resizeSidebar(e) {
 
 function applySidebarHighlights() {
     Array.from(document.getElementsByClassName('sidebar-item')).forEach((item) => {
-        if (item.package === packageName && (!item.tag || badgeFilters.tag.includes(item.tag))) {
+        if (item.package === packageName && (!item.release || badgeFilters.release.includes(item.release))) {
             item.classList.add('active');
         } else {
             item.classList.remove('active');
         }
     })
     Array.from(document.getElementsByClassName('caret')).forEach((group) => {
-        if (badgeFilters.tag.includes(group.tag)) {
+        if (badgeFilters.release.includes(group.release)) {
             group.classList.remove('collapsed');
         }
     })
@@ -177,7 +177,7 @@ function filterSidebar() {
         }
     })
     document.getElementById('all-packages-nodata').style.display = resultsFound ? 'none' : 'block';
-    document.getElementById('by-tag-nodata').style.display = resultsFound ? 'none' : 'block';
+    document.getElementById('by-release-nodata').style.display = resultsFound ? 'none' : 'block';
 }
 
 function selectSidebarTab(tab) {
@@ -196,37 +196,37 @@ function selectSidebarTab(tab) {
 function populateSidebarTabs() {
     if (!packageData) return;
     const allPackagesList = document.getElementById('all-packages-list');
-    const byTagList = document.getElementById('by-tag-list');
-    const tags = {};
+    const byReleaseList = document.getElementById('by-release-list');
+    const releases = {};
     Object.values(packageData).toSorted(
         (a, b) => a.uid.localeCompare(b.uid)
     ).forEach((package) => {
         allPackagesList.appendChild(createSidebarItem(package, undefined));
-        package.tags.forEach((tagName) => {
-            if (!tags[tagName]) {
-                tags[tagName] = createSidebarGroup(tagName);
+        package.releases.forEach((releaseName) => {
+            if (!releases[releaseName]) {
+                releases[releaseName] = createSidebarGroup(releaseName);
             }
-            tags[tagName].children[1].appendChild(createSidebarItem(package, tagName))
+            releases[releaseName].children[1].appendChild(createSidebarItem(package, releaseName))
         })
     })
-    byTagList.replaceChildren(...Object.values(tags));
+    byReleaseList.replaceChildren(...Object.values(releases));
     document.getElementById('all-packages-loading').style.display = 'none';
-    document.getElementById('by-tag-loading').style.display = 'none';
+    document.getElementById('by-release-loading').style.display = 'none';
     filterSidebar();
 }
 
-function createSidebarItem(package, tagName) {
+function createSidebarItem(package, releaseName) {
     const item = document.createElement('li');
     item.classList.add('sidebar-item');
     item.innerHTML = package.uid;
     item.onclick = (e) => {
         e.stopPropagation();
         let newUrl = basePath + `?package=${package.uid}`;
-        if (tagName) newUrl += `&tag=${tagName}`;
+        if (releaseName) newUrl += `&release=${releaseName}`;
         window.history.pushState(null, '', newUrl);
     }
     item.package = package.uid;
-    if (tagName) item.tag = tagName;
+    if (releaseName) item.release = releaseName;
     return item;
 }
 
@@ -241,7 +241,7 @@ function createSidebarGroup(groupName) {
     childrenContainer.classList.add('nested');
     group.appendChild(childrenContainer);
     group.onclick = () => {toggleSidebarGroup(group)};
-    group.tag = groupName;
+    group.release = groupName;
     return group;
 }
 
@@ -272,7 +272,7 @@ function toggleDiffMode() {
 
 function createFilterBadge(key, value, remove) {
     const badge = document.createElement('div');
-    badge.classList.add('tag', 'searchable-badge');
+    badge.classList.add('release', 'searchable-badge');
 
     const keyLabel = document.createElement('label');
     keyLabel.classList.add('text-[10px]', 'label', 'floating');
@@ -390,7 +390,7 @@ function groupBadges(rowId, column, data, link = false) {
             badge.innerHTML = d.label;
         } else {
             badge = document.createElement('button');
-            badge.classList.add('tag', 'searchable-badge');
+            badge.classList.add('release', 'searchable-badge');
             badge.onclick = () => addBadgeFilter(column, d);
             badge.innerHTML = d;
         }
@@ -513,10 +513,10 @@ function setupDataTable() {
                 }
             },
             {
-                name: 'tags',
-                data: 'tags',
+                name: 'releases',
+                data: 'releases',
                 render: function (data, type, row, info) {
-                    return groupBadges(info.row, 'tag', data);
+                    return groupBadges(info.row, 'release', data);
                 },
             },
             {
@@ -588,7 +588,7 @@ function setupDataTable() {
     setupColumnVisibilityOptions({
         hash: true,
         version: true,
-        tags: true,
+        releases: true,
         stacks: true,
         variants: false,
         platform: true,

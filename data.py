@@ -41,10 +41,10 @@ def load_data(path):
 
 
 @click.option(
-    '--tag',
+    '--release',
     '-t',
     multiple=True,
-    help='Build cache version tag to include. Can be specified multiple times.'
+    help='Build cache release to include. Can be specified multiple times.'
 )
 @click.option(
     '--stack',
@@ -59,19 +59,19 @@ def load_data(path):
     help='Package name to include. Can be specified multiple times.'
 )
 @click.command()
-def get_data(tag, stack, package):
+def get_data(release, stack, package):
     start = time.perf_counter()
-    include_tags = list(tag)
+    include_releases = list(release)
     include_stacks = list(stack)
     include_packages = list(package)
 
     packages = {}
     specs = {}
-    for tag_name, stack_info in get_response(MANIFEST_URL).items():
-        if len(include_tags) > 0 and tag_name not in include_tags:
+    for release_name, stack_info in get_response(MANIFEST_URL).items():
+        if len(include_releases) > 0 and release_name not in include_releases:
             continue
 
-        print(f'Tag: {tag_name}')
+        print(f'Release: {release_name}')
         for s in stack_info:
             stack_name = s['label']
             if len(include_stacks) > 0 and stack_name not in include_stacks:
@@ -92,10 +92,10 @@ def get_data(tag, stack, package):
                     packages[package_name] = dict(
                         uid=package_name,
                         url=f'https://packages.spack.io/package.html?name={package_name}',
-                        tags=set(),
+                        releases=set(),
                         specs=set(),
                     )
-                packages[package_name]['tags'].add(tag_name)
+                packages[package_name]['releases'].add(release_name)
 
                 spec_hash = spec['hash']
                 packages[package_name]['specs'].add(spec_hash)
@@ -145,9 +145,9 @@ def get_data(tag, stack, package):
                         target=target,
                         dependencies=dependencies,
                         stacks=set(),
-                        tags=set(),
+                        releases=set(),
                     )
-                specs[spec_hash]['tags'].add(tag_name)
+                specs[spec_hash]['releases'].add(release_name)
                 specs[spec_hash]['stacks'].add(stack_name)
 
     save_data(packages, PACKAGE_DATA_PATH)
