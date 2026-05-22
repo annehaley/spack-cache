@@ -209,7 +209,9 @@ function populateSidebarTabs() {
             releases[releaseName].children[1].appendChild(createSidebarItem(package, releaseName))
         })
     })
-    byReleaseList.replaceChildren(...Object.values(releases));
+    byReleaseList.replaceChildren(...Object.keys(releases).toSorted(
+        (a, b) => a.localeCompare(b)
+    ).map((key) => releases[key]));
     document.getElementById('all-packages-loading').style.display = 'none';
     document.getElementById('by-release-loading').style.display = 'none';
     filterSidebar();
