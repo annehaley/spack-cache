@@ -13,6 +13,7 @@ MANIFEST_URL = BASE_URL + 'cache_spack_io_index.json'
 DATA_DIR = Path(__file__).parent / '_data'
 PACKAGE_DATA_PATH = DATA_DIR / 'package_data.json.gz'
 SPECS_DATA_PATH = DATA_DIR / 'specs_data.json.gz'
+IGNORE_STACKS = ['root']
 
 
 class SetEncoder(JSONEncoder):
@@ -74,7 +75,10 @@ def get_data(release, stack, package):
         print(f'Release: {release_name}')
         for s in stack_info:
             stack_name = s['label']
-            if len(include_stacks) > 0 and stack_name not in include_stacks:
+            if (
+                stack_name in IGNORE_STACKS or 
+                (len(include_stacks) > 0 and stack_name not in include_stacks)
+            ):
                 continue
 
             print(f'  - Stack: {stack_name}')
