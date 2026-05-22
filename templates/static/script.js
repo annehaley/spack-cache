@@ -23,6 +23,7 @@ const pluralColumns = {
 const maxBadges = 3;
 let tableInitialized = false;
 let expandedCells = [];
+let showDevs = false;
 let diffMode = false;
 const noDiffMessage = '-';
 
@@ -168,7 +169,7 @@ function filterSidebar() {
         const [childCounter, childContainer] = group.children;
         const matchedChildren = Array.from(childContainer.children).filter((child) => matchString(filterString, child.package));
         childCounter.innerHTML = `(${matchedChildren.length})`;
-        if (matchedChildren.length) {
+        if (matchedChildren.length && (showDevs || !group.release.includes('develop'))) {
             group.classList.remove('hidden');
             if (emphasisString.length > 0) group.classList.remove('collapsed');
         } else {
@@ -264,11 +265,14 @@ function setAllSidebarGroupsOpen(open) {
     groups.forEach((group) => setSidebarGroupOpen(group, open));
 }
 
+function toggleShowDevs() {
+    showDevs = !showDevs;
+    filterSidebar();
+}
+
 // Specs Table
 function toggleDiffMode() {
     diffMode = !diffMode;
-    const toggle = document.getElementById('diff-mode-toggle');
-    toggle.checked = diffMode;
     updateTable();
 }
 

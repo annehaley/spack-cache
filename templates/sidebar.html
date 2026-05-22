@@ -32,6 +32,13 @@
                     Collapse All
                 </a>
             </div>
+            <div style="display: flex; padding: 5px 0px; column-gap: 5px; align-items: center;">
+                <label class="switch">
+                    <input type="checkbox" id="diff-mode-toggle" onchange="toggleShowDevs()">
+                    <span class="slider"></span>
+                </label>
+                <span class="text-gray-400" style="font-size: 14px;">Show development releases</span>
+            </div>
             <div id="by-release-loading" class="status">Loading...</div>
             <div id="by-release-nodata" class="status" style="display: none">No results.</div>
             <div id="by-release-list" class="sidebar-list"></div>
