@@ -31,6 +31,7 @@ const noDiffMessage = '-';
 // General
 async function fetchGzippedJson(url) {
   const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${url}`);
   const ds = new DecompressionStream('gzip');
   const decompressedStream = response.body.pipeThrough(ds);
   const text = await new Response(decompressedStream).text();
