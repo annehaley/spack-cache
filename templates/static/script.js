@@ -29,6 +29,15 @@ const noDiffMessage = '-';
 
 
 // General
+async function fetchGzippedJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${url}`);
+  const ds = new DecompressionStream('gzip');
+  const decompressedStream = response.body.pipeThrough(ds);
+  const text = await new Response(decompressedStream).text();
+  return JSON.parse(text);
+}
+
 function navigateToHome() {
     window.history.pushState(null, '', basePath + '/');
 }
@@ -46,11 +55,18 @@ function applyRoute(params) {
                 // https://datatables.net/manual/tech-notes/3
                 setupDataTable();
             }
-            badgeFilters = Object.fromEntries(
-                Object.keys(badgeFilters).map((key) => [key, urlParams.getAll(key)])
-            )
-            badgeFiltersUpdated();
-            updateTable();
+            if (specData) {
+                badgeFilters = Object.fromEntries(
+                    Object.keys(badgeFilters).map((key) => [key, urlParams.getAll(key)])
+                )
+                badgeFiltersUpdated();
+                updateTable();
+            } else {
+                // Set table empty message
+                Array.from(document.getElementsByClassName('dt-empty')).forEach(
+                    (el) => el.innerHTML = 'Loading data...'
+                )
+            }
         }
     }
     showContent(contentToShow);
@@ -75,8 +91,10 @@ function showContent(content_id) {
 }
 
 function setPackageName(name) {
-    currentSpecs = packageData[packageName].specs.map((hash) => specData[hash]);
-    updateBadgeOptions();
+    if (specData) {
+        currentSpecs = packageData[packageName].specs.map((hash) => specData[hash]);
+        updateBadgeOptions();
+    }
     document.getElementById('package-name').innerHTML = name;
     document.getElementById('package-link').href = "https://packages.spack.io/package.html?name=" + name;
 }
@@ -647,17 +665,25 @@ function updateTable() {
 // Ready
 $(document).ready(async function () {
     basePath = document.getElementById('base-path').innerHTML;
-    packageData = await (await fetch(`${basePath}/api/package_data.json`)).json();
-    specData = await (await fetch(`${basePath}/api/specs_data.json`)).json();
-    treeData = await (await fetch(`${basePath}/api/tree_data.json`)).json();
 
-    applyRoute(window.location.search);
+    fetchGzippedJson(`${basePath}/api/tree_data.json.gz`).then((data) => {
+        treeData = data;
+        loadTree('Stack -> Tag');
+        filterTree();
+    }).catch((err) => console.error('Failed to load tree data:', err));
+    fetchGzippedJson(`${basePath}/api/package_data.json.gz`).then((data) => {
+        packageData = data;
+        applyRoute(window.location.search);
+    }).catch((err) => console.error('Failed to load package data:', err));
+    fetchGzippedJson(`${basePath}/api/specs_data.json.gz`).then((data) => {
+        specData = data
+        applyRoute(window.location.search);
+    }).catch((err) => console.error('Failed to load spec data:', err));
+
     window.navigation.addEventListener("navigate", (e) => {
         const dest = e.destination.url;
         applyRoute(dest.includes('?') ? dest.split('?')[1] : '')
     });
 
-    loadTree('Stack -> Tag');
-    filterTree();
     setupSidebarResize();
 })
