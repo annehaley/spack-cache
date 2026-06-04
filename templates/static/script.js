@@ -201,13 +201,13 @@ function populateSidebarTabs() {
     const releases = {};
     Object.values(packageData).toSorted(
         (a, b) => a.uid.localeCompare(b.uid)
-    ).forEach((package) => {
-        allPackagesList.appendChild(createSidebarItem(package, undefined));
-        package.releases.forEach((releaseName) => {
+    ).forEach((pkg) => {
+        allPackagesList.appendChild(createSidebarItem(pkg, undefined));
+        pkg.releases.forEach((releaseName) => {
             if (!releases[releaseName]) {
                 releases[releaseName] = createSidebarGroup(releaseName);
             }
-            releases[releaseName].children[1].appendChild(createSidebarItem(package, releaseName))
+            releases[releaseName].children[1].appendChild(createSidebarItem(pkg, releaseName))
         })
     })
     byReleaseList.replaceChildren(...Object.keys(releases).toSorted(
@@ -218,17 +218,17 @@ function populateSidebarTabs() {
     filterSidebar();
 }
 
-function createSidebarItem(package, releaseName) {
+function createSidebarItem(pkg, releaseName) {
     const item = document.createElement('li');
     item.classList.add('sidebar-item');
-    item.innerHTML = package.uid;
+    item.innerHTML = pkg.uid;
     item.onclick = (e) => {
         e.stopPropagation();
-        let newUrl = basePath + `?package=${package.uid}`;
+        let newUrl = basePath + `?package=${pkg.uid}`;
         if (releaseName) newUrl += `&release=${releaseName}`;
         window.history.pushState(null, '', newUrl);
     }
-    item.package = package.uid;
+    item.package = pkg.uid;
     if (releaseName) item.release = releaseName;
     return item;
 }
