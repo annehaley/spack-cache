@@ -30,12 +30,12 @@ const noDiffMessage = '-';
 
 // General
 async function fetchGzippedJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${url}`);
-  const ds = new DecompressionStream('gzip');
-  const decompressedStream = response.body.pipeThrough(ds);
-  const text = await new Response(decompressedStream).text();
-  return JSON.parse(text);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${url}`);
+    const ds = new DecompressionStream('gzip');
+    const decompressedStream = response.body.pipeThrough(ds);
+    const text = await new Response(decompressedStream).text();
+    return JSON.parse(text);
 }
 
 function navigateToHome() {
@@ -45,7 +45,8 @@ function navigateToHome() {
 function applyRoute(params) {
     const urlParams = new URLSearchParams(params);
     packageName = urlParams.get('package');
-    let contentToShow = 'home-content'
+    let contentToShow = 'home-content';
+    setupHomepage();
     if (packageName) {
         contentToShow = 'package-not-found-content';
         if (packageData[packageName]) {
@@ -69,7 +70,7 @@ function applyRoute(params) {
             }
         }
     }
-    applySidebarHighlights(); 
+    applySidebarHighlights();
     showContent(contentToShow);
 }
 
@@ -100,6 +101,12 @@ function setPackageName(name) {
     document.getElementById('package-link').href = "https://packages.spack.io/package.html?name=" + name;
 }
 
+function setTextByClassName(className, text) {
+    Array.from(
+        document.getElementsByClassName(className)
+    ).forEach((el) => el.innerHTML = text);
+}
+
 function matchString(match, string) {
     match = match.toLowerCase();
     string = string.toLowerCase();
@@ -107,6 +114,37 @@ function matchString(match, string) {
         return string.endsWith(match.slice(0, -1));
     } else {
         return string.includes(match);
+    }
+}
+
+function copyCommand(e) {
+    const target = e.currentTarget;
+    const codeContent = $(target).parent().parent().find('code').text();
+    const copyContent = codeContent.replace('$ ', '')
+    navigator.clipboard.writeText(copyContent);
+    target.children[0].classList.add('hidden');
+    target.children[1].classList.remove('hidden');
+    setTimeout(() => {
+        target.children[0].classList.remove('hidden');
+        target.children[1].classList.add('hidden');
+    }, 3000);
+}
+
+function releaseNameToDate(releaseName) {
+    if (releaseName[0] !== 'v') return undefined;
+    const [year, month, day] = releaseName.slice(1).split('.')
+    return new Date(year, month - 1, day)  // months are 0 indexed
+}
+
+function setupHomepage() {
+    if (!specData || !packageData) return;
+    const releases = [...new Set(Object.values(packageData).map((p) => p.releases).flat())];
+    setTextByClassName('total-builds-stat', Object.keys(specData).length.toLocaleString());
+    setTextByClassName('total-packages-stat', Object.keys(packageData).length.toLocaleString());
+    setTextByClassName('total-releases-stat', releases.length.toLocaleString());
+    const orderedReleases = releases.filter((r) => r[0] === 'v').toSorted((a, b) => releaseNameToDate(a) - releaseNameToDate(b)).reverse();
+    if (orderedReleases.length) {
+        setTextByClassName('recent-release-name', orderedReleases[0]);
     }
 }
 
@@ -130,8 +168,8 @@ function resizeSidebar(e) {
     sidebar.style.width = `${newWidth}px`;
 
     const contentContainer = document.getElementById('content-container');
-    contentContainer.style.marginLeft = `${newWidth + 25}px`;
-    contentContainer.style.maxWidth = `calc(100% - ${newWidth + 50}px)`
+    contentContainer.style.marginLeft = `${newWidth}px`;
+    contentContainer.style.maxWidth = `calc(100% - ${newWidth}px)`
 }
 
 function applySidebarHighlights() {
@@ -159,7 +197,7 @@ function filterSidebar() {
         if (match) {
             resultsFound = true;
             item.classList.remove('hidden');
-            item.innerHTML = emphasisString.length > 0 ? item.package.replace(emphasisString, `<span class='font-bold'>${emphasisString}</span>`): item.package;
+            item.innerHTML = emphasisString.length > 0 ? item.package.replace(emphasisString, `<span class='font-bold'>${emphasisString}</span>`) : item.package;
         } else {
             item.classList.add('hidden');
             item.innerHTML = item.package;
@@ -243,7 +281,7 @@ function createSidebarGroup(groupName) {
     const childrenContainer = document.createElement('ul');
     childrenContainer.classList.add('nested');
     group.appendChild(childrenContainer);
-    group.onclick = () => {toggleSidebarGroup(group)};
+    group.onclick = () => { toggleSidebarGroup(group) };
     group.release = groupName;
     return group;
 }

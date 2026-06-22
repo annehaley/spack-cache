@@ -25,10 +25,12 @@
     <!-- Favicon and static content -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ base_path }}/favicon.ico" />
     <link rel="stylesheet" href="{{ base_path }}/static/style.css" />
+    <link rel="stylesheet" href="{{ base_path }}/static/lovable-styles.css" />
     <script src="{{ base_path }}/static/script.js"></script>
 </head>
 
-<body class="bg-gray-100">
+<body>
+    {% from 'macros.html' import builds_icon, packages_icon, releases_icon, left_arrow_icon, copy_icon, copy_command_button %}
     {% include "sidebar.html" %}
 
     <!-- Main content -->
@@ -37,7 +39,7 @@
             <h1 style="width: 100%; text-align: center;">Loading...</h1>
         </div>
 
-        <div id="home-content" class="py-8 pb-24" style="display: none">
+        <div id="home-content" style="display: none">
             {% include "home.html" %}
         </div>
 
@@ -48,15 +50,6 @@
         <div id="package-not-found-content" class="py-8 pb-24" style="display: none">
             <h1>Package not found.</h1>
         </div>
-
-        <!-- Site footer -->
-        <footer class="border-t border-base-300 footer footer-center p-4 text-base-content">
-            <p>
-                <span class="site-footer-credits">Contribute to the Spack Build Cache on
-                    <a target="_blank" href="https://github.com/spack/cache.spack.io">GitHub</a>.
-                </span>
-            </p>
-        </footer>
     </div>
 
     <!-- Inject context data into hidden elements -->
