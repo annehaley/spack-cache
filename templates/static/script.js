@@ -172,6 +172,16 @@ function resizeSidebar(e) {
     contentContainer.style.maxWidth = `calc(100% - ${newWidth}px)`
 }
 
+function setSidebarOpen(open) {
+    if (open) {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebar-shadow').classList.add('visible');
+    } else {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebar-shadow').classList.remove('visible');
+    }
+}
+
 function applySidebarHighlights() {
     Array.from(document.getElementsByClassName('sidebar-item')).forEach((item) => {
         if (item.package === packageName && (!item.release || badgeFilters.release.includes(item.release))) {
@@ -180,11 +190,19 @@ function applySidebarHighlights() {
             item.classList.remove('active');
         }
     })
-    Array.from(document.getElementsByClassName('caret')).forEach((group) => {
+    if (badgeFilters.release.length) {
+        selectSidebarTab('by-release');
+        if (!showDevs && badgeFilters.release.some((r) => r.includes('develop'))) {
+            toggleShowDevs();
+            document.getElementById('show-devs-toggle').checked = showDevs;
+        }
+        setAllSidebarGroupsOpen(false);
+        Array.from(document.getElementsByClassName('sidebar-group')).forEach((group) => {
         if (badgeFilters.release.includes(group.release)) {
             group.classList.remove('collapsed');
         }
     })
+    }
 }
 
 function filterSidebar() {
@@ -194,19 +212,21 @@ function filterSidebar() {
     const emphasisString = filterString.replace('$', '')
     Array.from(document.getElementsByClassName('sidebar-item')).forEach((item) => {
         const match = matchString(filterString, item.package);
+        const label = item.children[0];
         if (match) {
             resultsFound = true;
             item.classList.remove('hidden');
-            item.innerHTML = emphasisString.length > 0 ? item.package.replace(emphasisString, `<span class='font-bold'>${emphasisString}</span>`) : item.package;
+            label.innerHTML = emphasisString.length > 0 ? item.package.replace(emphasisString, `<span class='font-bold text-foreground'>${emphasisString}</span>`) : item.package;
         } else {
             item.classList.add('hidden');
-            item.innerHTML = item.package;
+            label.innerHTML = item.package;
         }
     })
     Array.from(document.getElementsByClassName('sidebar-group')).forEach((group) => {
-        const [childCounter, childContainer] = group.children;
+        const childContainer = $(group).find('ul').get(0);
+        const childCounter = $(group).find('.child-counter').get(0);
         const matchedChildren = Array.from(childContainer.children).filter((child) => matchString(filterString, child.package));
-        childCounter.innerHTML = `(${matchedChildren.length})`;
+        childCounter.innerHTML = matchedChildren.length.toLocaleString();
         if (matchedChildren.length && (showDevs || !group.release.includes('develop'))) {
             group.classList.remove('hidden');
             if (emphasisString.length > 0) group.classList.remove('collapsed');
@@ -253,13 +273,24 @@ function populateSidebarTabs() {
     ).map((key) => releases[key]));
     document.getElementById('all-packages-loading').style.display = 'none';
     document.getElementById('by-release-loading').style.display = 'none';
+    document.getElementById('show-devs-toggle').checked = showDevs;
     filterSidebar();
 }
 
 function createSidebarItem(pkg, releaseName) {
     const item = document.createElement('li');
-    item.classList.add('sidebar-item');
-    item.innerHTML = pkg.uid;
+    item.classList.add(
+        'sidebar-item', 'flex', 'w-full', 'items-center', 'justify-between', 'rounded', 
+        'px-2', 'py-1.5', 'text-left', 'text-xs', 'hover:bg-accent', 'hover:text-accent-foreground',
+    );
+    const nameLabel = document.createElement('code');
+    nameLabel.innerHTML = pkg.uid;
+    item.appendChild(nameLabel);
+    const numSpecsLabel = document.createElement('span');
+    numSpecsLabel.classList.add('text-muted-foreground');
+    numSpecsLabel.innerHTML = pkg.specs.length;
+    if (releaseName) numSpecsLabel.classList.add('hidden');
+    item.appendChild(numSpecsLabel);
     item.onclick = (e) => {
         e.stopPropagation();
         let newUrl = basePath + `?package=${pkg.uid}`;
@@ -272,25 +303,52 @@ function createSidebarItem(pkg, releaseName) {
 }
 
 function createSidebarGroup(groupName) {
+    // Clone svg nodes rather than creating them in JS
+    const downChevronIcon = document.getElementsByClassName('lucide-chevron-down')[0].cloneNode(true);
+    const tagIcon = document.getElementsByClassName('lucide-tag')[0].cloneNode(true);
+    tagIcon.classList.remove('h-5', 'w-5');
+    tagIcon.classList.add('h-3.5', 'w-3.5', 'text-primary');
+
     const group = document.createElement('li');
-    group.classList.add('sidebar-group', 'caret', 'collapsed');
-    group.innerHTML = groupName;
-    const childCounter = document.createElement('span');
-    childCounter.style.paddingLeft = '5px';
-    group.appendChild(childCounter);
+    group.classList.add('sidebar-group');
+    const groupContainer = document.createElement('div');
+    groupContainer.classList.add('flex', 'items-center');
+    const groupButton = document.createElement('button');
+    groupButton.classList.add(
+        'flex', 'flex-1', 'items-center', 'gap-1', 'rounded', 'px-1.5', 'py-1.5', 
+        'text-left', 'hover:bg-accent', 'hover:text-accent-foreground',
+    );
+    groupButton.onclick = () => { toggleSidebarGroup(group) };
+    groupButton.appendChild(downChevronIcon);
+    groupButton.appendChild(tagIcon);
+    const groupNameLabel = document.createElement('span');
+    groupNameLabel.classList.add('truncate', 'font-medium', 'text-sm');
+    groupNameLabel.innerHTML = groupName;
+    groupButton.appendChild(groupNameLabel);
+    const groupPackageCountLabel = document.createElement('span');
+    groupPackageCountLabel.classList.add('ml-auto', 'text-xs', 'text-muted-foreground', 'child-counter');
+    groupButton.appendChild(groupPackageCountLabel);
+    groupContainer.appendChild(groupButton);
+    group.appendChild(groupContainer);
     const childrenContainer = document.createElement('ul');
-    childrenContainer.classList.add('nested');
+    childrenContainer.classList.add('nested', 'border-l', 'border-border', 'pl-1');
     group.appendChild(childrenContainer);
-    group.onclick = () => { toggleSidebarGroup(group) };
     group.release = groupName;
     return group;
 }
 
 function setSidebarGroupOpen(group, open) {
+    const currentChevronQuery = $(group).find('svg.lucide-chevron');
+    const currentChevron = currentChevronQuery.get(0);
+    const parent = currentChevronQuery.parent().get(0);
     if (open) {
-        group.classList.remove('collapsed')
+        const downChevronIcon = document.getElementsByClassName('lucide-chevron-down')[0].cloneNode(true);
+        parent.replaceChild(downChevronIcon, currentChevron);
+        group.classList.remove('collapsed');
     } else {
-        group.classList.add('collapsed')
+        const rightChevronIcon = document.getElementsByClassName('lucide-chevron-right')[0].cloneNode(true);
+        parent.replaceChild(rightChevronIcon, currentChevron);
+        group.classList.add('collapsed');
     }
 }
 

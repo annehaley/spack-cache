@@ -30,11 +30,11 @@
 </head>
 
 <body>
-    {% from 'macros.html' import builds_icon, packages_icon, releases_icon, left_arrow_icon, copy_icon, copy_command_button %}
+    {% from 'macros.html' import menu_icon, search_icon, builds_icon, packages_icon, releases_icon, left_arrow_icon, right_chevron_icon, down_chevron_icon, tag_icon, copy_icon, copy_command_button %}
     {% include "sidebar.html" %}
 
     <!-- Main content -->
-    <div class="container shifted" id="content-container">
+    <div class="container" id="content-container">
         <div id="loading-content" class="py-8 pb-24">
             <h1 style="width: 100%; text-align: center;">Loading...</h1>
         </div>
@@ -54,6 +54,12 @@
 
     <!-- Inject context data into hidden elements -->
     <a id="base-path" style="display: none">{{base_path}}</a>
+    <!-- Hide some icon nodes that will be duplicated by javascript -->
+    <div class="hidden">
+        {{ right_chevron_icon() }}
+        {{ down_chevron_icon() }}
+        {{ tag_icon() }}
+    </div>
 </body>
 
 </html>
