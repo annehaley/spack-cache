@@ -93,12 +93,12 @@ function showContent(content_id) {
 }
 
 function setPackageName(name) {
+    setTextByClassName('package-name', name)
     if (specData) {
         currentSpecs = packageData[packageName].specs.map((hash) => specData[hash]);
+        setTextByClassName('num-specs', currentSpecs.length.toLocaleString())
         updateBadgeOptions();
     }
-    document.getElementById('package-name').innerHTML = name;
-    document.getElementById('package-link').href = "https://packages.spack.io/package.html?name=" + name;
 }
 
 function setTextByClassName(className, text) {
@@ -198,10 +198,10 @@ function applySidebarHighlights() {
         }
         setAllSidebarGroupsOpen(false);
         Array.from(document.getElementsByClassName('sidebar-group')).forEach((group) => {
-        if (badgeFilters.release.includes(group.release)) {
-            group.classList.remove('collapsed');
-        }
-    })
+            if (badgeFilters.release.includes(group.release)) {
+                group.classList.remove('collapsed');
+            }
+        })
     }
 }
 
@@ -364,6 +364,45 @@ function setAllSidebarGroupsOpen(open) {
 function toggleShowDevs() {
     showDevs = !showDevs;
     filterSidebar();
+}
+
+// Install Dialog
+function toggleInstallDialogShown(hash) {
+    const dialog = document.getElementById('install-dialog');
+    if (dialog.classList.contains('hidden')) {
+        dialog.classList.remove('hidden');
+        const command = document.getElementById('install-command');
+        const packageInstallDetail = document.getElementById('package-install-detail');
+        const hashInstallDetail = document.getElementById('hash-install-detail');
+        if (hash) {
+            command.innerHTML = 'spack install /' + hash;
+            packageInstallDetail.classList.add('hidden');
+            hashInstallDetail.classList.remove('hidden');
+        } else {
+            command.innerHTML = 'spack install ' + packageName;
+            packageInstallDetail.classList.remove('hidden');
+            hashInstallDetail.classList.add('hidden');
+        }
+    } else {
+        dialog.classList.add('hidden');
+    }
+}
+
+function toggleInstallDialogExpandedSection() {
+    const expansionButton = document.getElementById('install-dialog-expansion-button');
+    const expansionContent = document.getElementById('install-dialog-expansion-content');
+     const currentChevronQuery = $(expansionButton).find('svg.lucide-chevron');
+    const currentChevron = currentChevronQuery.get(0);
+    const parent = currentChevronQuery.parent().get(0);
+    if (expansionContent.classList.contains('hidden')) {
+        const downChevronIcon = document.getElementsByClassName('lucide-chevron-down')[0].cloneNode(true);
+        parent.replaceChild(downChevronIcon, currentChevron);
+        expansionContent.classList.remove('hidden');
+    } else {
+        const rightChevronIcon = document.getElementsByClassName('lucide-chevron-right')[0].cloneNode(true);
+        parent.replaceChild(rightChevronIcon, currentChevron);
+        expansionContent.classList.add('hidden');
+    }
 }
 
 // Specs Table
@@ -531,31 +570,38 @@ function showMoreBadges(e, n, id) {
 
 function displayHash(hash) {
     const container = document.createElement('div');
-    container.onclick = (e) => e.stopPropagation();
-    container.style.display = 'inline-flex';
-    container.style.columnGap = '5px';
-    const label = document.createElement('span');
-    label.classList.add('font-mono', 'tooltip');
-    label.style.fontSize = '0.9rem';
-    label.innerHTML = hash.slice(0, 7);
-    const tooltip = document.createElement('span');
-    tooltip.classList.add('tooltip-text');
-    tooltip.innerHTML = hash;
-    label.appendChild(tooltip);
-    container.appendChild(label);
-    const copyButton = document.createElement('div');
-    copyButton.classList.add('ri-file-copy-line');
-    copyButton.onclick = () => {
+    const installButton = document.createElement('button');
+    installButton.classList.add(
+        'inline-flex', 'items-center', 'gap-1', 'rounded-md', 'border', 'border-border',
+        'px-2', 'py-1', 'text-xs', 'text-muted-foreground', 'transition-colors', 'hover:text-foreground',
+    )
+    installButton.style.marginRight = '10px';
+    const installIcon = document.getElementsByClassName('lucide-download')[0].cloneNode(true);
+    installButton.appendChild(installIcon);
+    const installLabel = document.createElement('span');
+    installLabel.innerHTML = 'Install';
+    installButton.appendChild(installLabel);
+    installButton.onclick = () => toggleInstallDialogShown(hash);
+    container.appendChild(installButton);
+    const hashButton = document.createElement('button');
+    hashButton.classList.add('inline-flex', 'items-center', 'gap-1.5', 'font-mono', 'text-xs', 'hover:text-primary')
+    hashButton.title = hash.toLowerCase();
+    const hashLabel = document.createElement('span');
+    hashLabel.classList.add('truncate');
+    hashLabel.innerHTML = hash.slice(0, 7);
+    hashButton.appendChild(hashLabel);
+    const copyIcon = document.getElementsByClassName('lucide-copy')[0].cloneNode(true);
+    const checkIcon = document.getElementsByClassName('lucide-check')[0].cloneNode(true);
+    hashButton.appendChild(copyIcon);
+    hashButton.onclick = () => {
         navigator.clipboard.writeText(hash);
-        copyButton.classList.add('ri-check-line');
-        copyButton.classList.remove('ri-file-copy-line');
+        hashButton.replaceChild(checkIcon, copyIcon);
         setTimeout(() => {
-            copyButton.classList.remove('ri-check-line');
-            copyButton.classList.add('ri-file-copy-line');
-        }, 3000);
+            hashButton.replaceChild(copyIcon, checkIcon);
+        }, 3000)
 
-    };
-    container.appendChild(copyButton);
+    }
+    container.appendChild(hashButton);
     return container;
 }
 
@@ -753,8 +799,7 @@ function updateTable() {
         });
     }
     table.clear().rows.add(filteredData).draw();
-    const resultSummary = document.getElementById('result-summary');
-    resultSummary.innerHTML = `Showing ${filteredData.length} of ${currentSpecs.length} Results`;
+    setTextByClassName('num-table-rows', filteredData.length.toLocaleString());
 }
 
 // Ready

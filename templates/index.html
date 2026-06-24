@@ -30,8 +30,9 @@
 </head>
 
 <body>
-    {% from 'macros.html' import menu_icon, search_icon, builds_icon, packages_icon, releases_icon, left_arrow_icon, right_chevron_icon, down_chevron_icon, tag_icon, copy_icon, copy_command_button %}
+    {% from 'macros.html' import menu_icon, search_icon, builds_icon, packages_icon, releases_icon, left_arrow_icon, right_chevron_icon, down_chevron_icon, tag_icon, copy_icon, copy_command_button, install_icon, close_icon %}
     {% include "sidebar.html" %}
+    {% include "install_dialog.html" %}
 
     <!-- Main content -->
     <div class="container" id="content-container">
