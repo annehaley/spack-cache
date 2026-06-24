@@ -25,6 +25,7 @@ let tableInitialized = false;
 let expandedCells = [];
 let showDevs = false;
 let diffMode = false;
+let common = {};
 const noDiffMessage = '-';
 
 
@@ -280,7 +281,7 @@ function populateSidebarTabs() {
 function createSidebarItem(pkg, releaseName) {
     const item = document.createElement('li');
     item.classList.add(
-        'sidebar-item', 'flex', 'w-full', 'items-center', 'justify-between', 'rounded', 
+        'sidebar-item', 'flex', 'w-full', 'items-center', 'justify-between', 'rounded',
         'px-2', 'py-1.5', 'text-left', 'text-xs', 'hover:bg-accent', 'hover:text-accent-foreground',
     );
     const nameLabel = document.createElement('code');
@@ -315,7 +316,7 @@ function createSidebarGroup(groupName) {
     groupContainer.classList.add('flex', 'items-center');
     const groupButton = document.createElement('button');
     groupButton.classList.add(
-        'flex', 'flex-1', 'items-center', 'gap-1', 'rounded', 'px-1.5', 'py-1.5', 
+        'flex', 'flex-1', 'items-center', 'gap-1', 'rounded', 'px-1.5', 'py-1.5',
         'text-left', 'hover:bg-accent', 'hover:text-accent-foreground',
     );
     groupButton.onclick = () => { toggleSidebarGroup(group) };
@@ -391,7 +392,7 @@ function toggleInstallDialogShown(hash) {
 function toggleInstallDialogExpandedSection() {
     const expansionButton = document.getElementById('install-dialog-expansion-button');
     const expansionContent = document.getElementById('install-dialog-expansion-content');
-     const currentChevronQuery = $(expansionButton).find('svg.lucide-chevron');
+    const currentChevronQuery = $(expansionButton).find('svg.lucide-chevron');
     const currentChevron = currentChevronQuery.get(0);
     const parent = currentChevronQuery.parent().get(0);
     if (expansionContent.classList.contains('hidden')) {
@@ -408,16 +409,33 @@ function toggleInstallDialogExpandedSection() {
 // Specs Table
 function toggleDiffMode() {
     diffMode = !diffMode;
+    const button = document.getElementById('diff-mode-button');
+    if (diffMode) {
+        button.classList.add('border-primary/40', 'bg-primary/10', 'text-primary')
+        button.children[1].innerHTML = 'Show all values';
+        const eyeOffIcon = document.getElementsByClassName('lucide-eye-off')[0].cloneNode(true);
+        button.replaceChild(eyeOffIcon, button.children[0]);
+    } else {
+        button.classList.remove('border-primary/40', 'bg-primary/10', 'text-primary')
+        button.children[1].innerHTML = 'Hide common values';
+        const eyeOnIcon = document.getElementsByClassName('lucide-eye-on')[0].cloneNode(true);
+        button.replaceChild(eyeOnIcon, button.children[0]);
+    }
     updateTable();
 }
 
 function createFilterBadge(key, value, remove) {
     const badge = document.createElement('div');
-    badge.classList.add('release', 'searchable-badge');
+    badge.classList.add(
+        'group', 'inline-flex', 'items-center', 'gap-1', 'rounded-md',
+        'border', 'border-primary/40', 'bg-primary/10', 'px-2', 'py-0.5',
+        'text-xs', 'text-primary', 'hover:bg-primary/20'
+    );
 
     const keyLabel = document.createElement('label');
-    keyLabel.classList.add('text-[10px]', 'label', 'floating');
-    keyLabel.innerHTML = key;
+    keyLabel.classList.add('text-primary/70');
+    keyLabel.style.textTransform = 'capitalize';
+    keyLabel.innerHTML = key + ': ';
     badge.appendChild(keyLabel);
 
     const valueLabel = document.createElement('label');
@@ -425,9 +443,9 @@ function createFilterBadge(key, value, remove) {
     badge.appendChild(valueLabel);
 
     if (remove) {
-        const removeIcon = document.createElement('div');
-        removeIcon.classList.add('remove-icon');
-        removeIcon.innerHTML = 'X';
+        const removeIcon = document.getElementsByClassName('lucide-close')[0].cloneNode(true);
+        removeIcon.classList.remove('h-4', 'w-4');
+        removeIcon.classList.add('h-3', 'w-3');
         badge.appendChild(removeIcon);
     }
 
@@ -457,19 +475,38 @@ function updateBadgeOptions() {
     const container = document.getElementById('badge-options-list');
     container.innerHTML = '';
     for (const key in badgeOptions) {
+        const keyLabel = document.createElement('div');
+        keyLabel.classList.add(
+            'sticky', 'top-0', 'bg-surface-elevated', 'px-3', 'py-1', 'text-[10px]',
+            'font-semibold', 'uppercase', 'tracking-wider', 'text-muted-foreground',
+        )
+        keyLabel.innerHTML = key;
+        keyLabel.searchContent = badgeOptions[key].join(',');
+        container.appendChild(keyLabel);
         for (value of badgeOptions[key]) {
-            const badge = createFilterBadge(key, value, false);
-            badge.key = key;
-            badge.value = value;
-            badge.addEventListener('mousedown', (e) => {
-                // prevent default on mousedown event so that focus remains on filter input
-                e.preventDefault();
-                addBadgeFilter(badge.key, badge.value)
-            })
-            container.appendChild(badge);
+            const valueLabel = document.createElement('button');
+            valueLabel.classList.add(
+                'flex', 'w-full', 'items-baseline', 'gap-2', 'px-3', 'py-1.5',
+                'text-left', 'text-xs', 'hover:bg-accent', 'hover:text-accent-foreground'
+            )
+            valueLabel.innerHTML = value;
+            valueLabel.searchContent = value;
+            // Copy key and value for onclick definition;
+            const [k, v] = [key, value];
+            valueLabel.onclick = () => { addBadgeFilter(k, v) };
+            container.appendChild(valueLabel);
         }
     }
     filterBadgeOptions()
+}
+
+function setBadgeOptionsMenuVisible(visible) {
+    const menu = document.getElementById('badge-options-menu');
+    if (visible) {
+        menu.classList.remove('hidden');
+    } else {
+        menu.classList.add('hidden');
+    }
 }
 
 function addBadgeFilter(column, label) {
@@ -499,15 +536,11 @@ function badgeFiltersUpdated() {
 function filterBadgeOptions() {
     const filterString = document.getElementById('badge-options-filter').value;
     const container = document.getElementById('badge-options-list');
-    Array.from(container.children).forEach((badge) => {
-        if (
-            !filterString.length ||
-            badge.key.toLowerCase().includes(filterString.toLowerCase()) ||
-            badge.value.toLowerCase().includes(filterString.toLowerCase())
-        ) {
-            badge.classList.remove('hidden')
+    Array.from(container.children).forEach((child) => {
+        if (!filterString.length || child.searchContent.toLowerCase().includes(filterString.toLowerCase())) {
+            child.classList.remove('hidden')
         } else {
-            badge.classList.add('hidden')
+            child.classList.add('hidden')
         }
     })
 }
@@ -531,7 +564,20 @@ function groupBadges(rowId, column, data, link = false) {
             badge.innerHTML = d.label;
         } else {
             badge = document.createElement('button');
-            badge.classList.add('release', 'searchable-badge');
+            if (badgeFilters[column].includes(d)) {
+                badge.classList.add(
+                    'group', 'inline-flex', 'items-center', 'gap-1', 'rounded-md',
+                    'border', 'border-primary/40', 'bg-primary/10', 'px-2', 'py-0.5',
+                    'text-xs', 'text-primary', 'hover:bg-primary/20'
+                );
+            } else {
+                badge.classList.add(
+                    'inline-flex', 'max-w-full', 'items-center', 'rounded', 'text-left', 'text-xs',
+                    'transition-colors', 'border', 'border-transparent', 'px-1.5', 'py-0.5',
+                    'underline', 'decoration-dashed', 'decoration-primary/40', 'underline-offset-[3px]',
+                    'hover:border-pill-border', 'hover:bg-pill-bg', 'hover:text-foreground', 'hover:no-underline',
+                );
+            }
             badge.onclick = () => addBadgeFilter(column, d);
             badge.innerHTML = d;
         }
@@ -545,7 +591,7 @@ function groupBadges(rowId, column, data, link = false) {
     });
     if (data.length > maxBadges) {
         const showMore = document.createElement('button');
-        showMore.classList.add('btn', 'btn-sm', 'btn-ghost', 'normal-case', 'pl-2')
+        showMore.classList.add('toggle', 'text-xs', 'pl-2')
         showMore.innerHTML = expand ? 'Show Less' : `... Show ${data.length - maxBadges} More`;
         showMore.onclick = (e) => showMoreBadges(e, data.length - maxBadges, container.id)
         container.appendChild(showMore)
@@ -554,28 +600,30 @@ function groupBadges(rowId, column, data, link = false) {
 }
 
 function showMoreBadges(e, n, id) {
-    const target = e.target
-    $(target).parent().find('.hidden').toggle();
-    $(target).text(function (i, text) {
-        const showMoreText = `... Show ${n} More`;
-        const expand = text === showMoreText;
-        if (expand && !expandedCells.includes(id)) {
-            expandedCells.push(id);
-        } else if (!expand) {
-            expandedCells = expandedCells.filter((cellId) => cellId !== id);
+    const target = e.target;
+    const visible = target.innerHTML === 'Show Less';
+    const container = $(target).parent().get(0);
+    target.innerHTML = visible ? `... Show ${n} More` : 'Show Less';
+    for (const child of Array.from(container.children).slice(maxBadges)) {
+        if (!child.classList.contains('toggle')) {
+            if (visible) {
+                child.classList.add('hidden')
+            } else {
+                child.classList.remove('hidden');
+            }
         }
-        return expand ? "Show Less" : showMoreText;
-    })
+    }
 }
 
 function displayHash(hash) {
     const container = document.createElement('div');
+    container.style.display = 'contents';
     const installButton = document.createElement('button');
     installButton.classList.add(
         'inline-flex', 'items-center', 'gap-1', 'rounded-md', 'border', 'border-border',
         'px-2', 'py-1', 'text-xs', 'text-muted-foreground', 'transition-colors', 'hover:text-foreground',
     )
-    installButton.style.marginRight = '10px';
+    installButton.style.marginRight = '22px';
     const installIcon = document.getElementsByClassName('lucide-download')[0].cloneNode(true);
     installButton.appendChild(installIcon);
     const installLabel = document.createElement('span');
@@ -612,9 +660,15 @@ function setupColumnVisibilityOptions(columns) {
         const visible = columns[col];
         const colIndex = table.columns().names().indexOf(col);
         table.column(colIndex).visible(visible);
-        const item = document.createElement('li');
-        if (visible) item.classList.add('checked');
-        item.onclick = () => {
+        const item = document.createElement('label');
+        item.classList.add(
+            'flex', 'cursor-pointer', 'items-center', 'gap-2', 'px-3', 'py-1.5', 'text-xs', 'hover:bg-accent'
+        )
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.classList.add('h-3.5', 'w-3.5', 'accent-primary');
+        checkbox.checked = visible;
+        checkbox.oninput = () => {
             const currentVisibility = table.column(colIndex).visible();
             if (currentVisibility) {
                 table.column(colIndex).visible(false);
@@ -623,9 +677,22 @@ function setupColumnVisibilityOptions(columns) {
                 table.column(colIndex).visible(true);
                 item.classList.add('checked');
             }
+            updateCommonValues(undefined);
         }
-        item.innerHTML = col;
+        item.appendChild(checkbox);
+        const itemLabel = document.createElement('span');
+        itemLabel.innerHTML = col;
+        item.appendChild(itemLabel);
         container.appendChild(item);
+    }
+}
+
+function setColumnsMenuVisible(visible) {
+    const columnsMenuWrapper = document.getElementById('columns-menu-wrapper');
+    if (visible) {
+        columnsMenuWrapper.classList.remove('hidden');
+    } else {
+        columnsMenuWrapper.classList.add('hidden');
     }
 }
 
@@ -643,6 +710,9 @@ function setupDataTable() {
             search: "Filter: ",
         },
         pageLength: 25,
+        columnDefs: [
+            { targets: 0, width: '200px' },
+        ],
         columns: [
             {
                 name: 'hash',
@@ -747,6 +817,54 @@ function setupDataTable() {
     tableInitialized = true;
 }
 
+function updateCommonValues(filteredData) {
+    badgeFiltersUpdated();
+    const table = $('#cache').DataTable();
+    if (!filteredData) filteredData = table.rows().data().toArray();
+    common = {};
+    for (const key in filteredData[0]) {
+        const value = filteredData[0][key];
+        common[key] = [];
+        if (Array.isArray(value)) {
+            for (let v of value) {
+                if (v.label) v = v.label;
+                if (filteredData.every((d) => {
+                    const dv = d[key].map((k) => k.label ? k.label : k)
+                    return dv.includes(v)
+                })) {
+                    common[key].push(v)
+                }
+            }
+        } else if (filteredData.every((d) => d[key] === value)) {
+            common[key].push(value);
+        }
+    }
+    const badgeFiltersContainer = document.getElementById('badge-filters');
+    for (var key in common) {
+        let keyName = key;
+        if (keyName !== 'os' && keyName.endsWith('s')) keyName = keyName.slice(0, -1);
+        const colIndex = table.columns().names().indexOf(key);
+        if (table.column(colIndex).visible()) {
+            for (const value of common[key]) {
+                if (badgeFilters[keyName] && !badgeFilters[keyName].includes(value)) {
+                    const container = document.createElement('span');
+                    container.classList.add(
+                        'inline-flex', 'items-center', 'gap-1', 'rounded-md', 'bg-muted', 'px-2', 'py-0.5', 'text-xs'
+                    )
+                    const keyLabel = document.createElement('span');
+                    keyLabel.classList.add('text-muted-foreground');
+                    keyLabel.innerHTML = keyName + ': ';
+                    container.appendChild(keyLabel);
+                    const valueLabel = document.createElement('span');
+                    valueLabel.innerHTML = value;
+                    container.appendChild(valueLabel);
+                    badgeFiltersContainer.appendChild(container);
+                }
+            }
+        }
+    }
+}
+
 function updateTable() {
     let table = $('#cache').DataTable();
     let filteredData = currentSpecs.filter((d) => {
@@ -762,41 +880,22 @@ function updateTable() {
         }
         return true;
     });
+    updateCommonValues(filteredData);
     if (diffMode && filteredData.length > 1) {
-        const common = {};
-        for (const key in filteredData[0]) {
-            const value = filteredData[0][key];
-            if (Array.isArray(value)) {
-                common[key] = [];
-                for (let v of value) {
-                    if (v.label) v = v.label;
-                    if (filteredData.every((d) => {
-                        const dv = d[key].map((k) => k.label ? k.label : k)
-                        return dv.includes(v)
-                    })) {
-                        common[key].push(v)
-                    }
+        filteredData = filteredData.map((d) => Object.fromEntries(
+            Object.entries(d).map(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value = value.filter((v) => {
+                        if (v.label) v = v.label;
+                        return !common[key].includes(v)
+                    });
+                    if (!value.length) value = [noDiffMessage];
+                } else if (common[key].includes(value)) {
+                    value = noDiffMessage;
                 }
-            } else {
-                common[key] = filteredData.every((d) => d[key] === value) ? value : null;
-            }
-        }
-        filteredData = filteredData.map((d) => {
-            return Object.fromEntries(
-                Object.entries(d).map(([key, value]) => {
-                    if (Array.isArray(value)) {
-                        value = value.filter((v) => {
-                            if (v.label) v = v.label;
-                            return !common[key].includes(v)
-                        });
-                        if (!value.length) value = [noDiffMessage];
-                    } else if (value === common[key]) {
-                        value = noDiffMessage;
-                    }
-                    return [key, value]
-                })
-            )
-        });
+                return [key, value]
+            })
+        ));
     }
     table.clear().rows.add(filteredData).draw();
     setTextByClassName('num-table-rows', filteredData.length.toLocaleString());

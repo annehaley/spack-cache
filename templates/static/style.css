@@ -409,134 +409,48 @@ input:checked+.slider:before {
   animation: button-pop var(--animation-btn, 0.25s) ease-out;
 }
 
-/* Badges */
-
-#badge-filters {
-  flex: 1;
-  min-width: 100px;
-  max-width: 100%;
-}
-
-#badge-filters .searchable-badge {
-  padding: 12px 28px 4px 8px;
-  margin: 2px 4px;
-}
-
-#badge-options-list .searchable-badge {
-  padding: 12px 8px 4px 8px;
-  margin: 2px 4px;
-  justify-content: left;
-}
-
-#badge-filters .searchable-badge .remove-icon {
-  position: absolute;
-  right: 8px;
-  top: 8px;
-}
-
-.searchable-badge {
-  position: relative;
-  display: inline-flex;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  transition-property: color, background-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter;
-  transition-property: color, background-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-property: color, background-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
-  transition-duration: 200ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: var(--rounded-btn, 0.5rem);
-  min-width: 70px;
-  max-width: calc(100% - 8px);
-  padding: 5px 10px;
-  margin: 2px;
-  font-size: 0.875rem;
-  line-height: 1.1em;
-  font-weight: 600;
-  animation: button-pop var(--animation-btn, 0.25s) ease-out;
-  background-color: hsl(var(--s));
-  color: hsl(var(--sc));
-  text-transform: none;
-  text-wrap: nowrap;
-  white-space: nowrap;
-}
-
-.searchable-badge:hover {
-  background-color: hsl(var(--sf)) !important;
-  color: hsl(var(--sc)) !important;
-}
-
-.searchable-badge:active:hover,
-.searchable-badge:active:focus {
-  transform: scale(var(--btn-focus-scale, 0.95));
-}
-
-.searchable-badge label {
-  min-width: 0;
-  width: 100%;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-}
-
-.searchable-badge label.floating {
-  position: absolute;
-  text-align: left;
-  left: 8px;
-  top: 2px;
-  height: 12px;
-  padding: 0px;
-  background-color: transparent;
-  z-index: 3;
-}
-
-label.floating::-webkit-scrollbar {
-    display: none;
-}
-
 /* Tables */
 .table {
   text-indent: 0;
-  border-color: inherit;
-  border-collapse: collapse;
   display: table;
   width: 100% !important;
 }
 
-.table :where(tbody th, tbody td) {
-  background-color: hsl(var(--b1));
-}
-
-.table :where(thead, tfoot) :where(th, td) {
-  background-color: hsl(var(--b2, var(--b1)));
+.table :where(thead, tfoot) :where(th, td), .table-responsive-column-label {
+  background-color: var(--surface);
+  color: var(--muted-foreground);
   font-size: 0.75rem;
   line-height: 1rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border) !important;
 }
 
-.table:where(:not(.table-zebra)) :where(thead, tbody, tfoot) :where(tr:not(:last-child) :where(th, td)) {
+.table-responsive-column-label {
+  min-width: 120px;
+  line-height: 1rem;
+  padding: 8px;
+  margin-right: 8px;
+}
+
+.table :where(tr:not(:last-child)) {
   border-bottom-width: 1px;
-  border-color: hsl(var(--b2, var(--b1)));
+  border-color: var(--color-border);
+}
+
+.table tr:nth-child(even) {
+  background-color: var(--surface);
 }
 
 .table.dataTable td {
   vertical-align: text-top;
 }
 
-.table-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  column-gap: 10px;
-  padding-top: 10px;
-  margin: 10px 0px;
-  width: 100%;
+th[data-dt-column="0"] .dt-column-header {
+  /* Hash column title only */
+  padding-left: 90px;
 }
 
 .dt-layout-table {
@@ -557,18 +471,6 @@ label.floating::-webkit-scrollbar {
 
 .dt-paging .dt-paging-button.current {
   background: hsl(var(--s)) !important;
-}
-
-.table-responsive-column-label {
-  min-width: 120px;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  font-weight: bold;
-  line-height: 1rem;
-  color: hsla(var(--bc));
-  background-color: hsl(var(--b2, var(--b1)));
-  padding: 8px;
-  margin-right: 8px;
 }
 
 /* Tooltips */
